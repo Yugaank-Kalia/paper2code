@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import type { Metadata } from "next";
 import { Badge } from "@/components/ui/badge";
 import { UploadPaperDialog } from "@/components/upload-paper-dialog";
 import { getUserPapers } from "@/app/dashboard/actions/get-papers";
@@ -16,6 +17,19 @@ import {
   Code,
   FileDown,
 } from "lucide-react";
+
+export const metadata: Metadata = {
+  title: "Dashboard — paper-to-code",
+  openGraph: {
+    title: "Dashboard — paper-to-code",
+    images: [{ url: "/dashboard.png", width: 1280, height: 720, alt: "paper-to-code dashboard" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Dashboard — paper-to-code",
+    images: ["/dashboard.png"],
+  },
+};
 
 export default async function DashboardPage() {
   const result = await getUserPapers();

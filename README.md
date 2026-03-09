@@ -1,6 +1,6 @@
 # paper-to-code
 
-Turn academic papers into working PyTorch implementations. Upload a PDF, TXT, or Markdown paper, and the app extracts the core algorithms, model architecture, and training procedures using RAG + a local LLM, then generates annotated, runnable code blocks.
+Turn academic papers into working PyTorch implementations. Upload a PDF, TXT, or Markdown paper, and the app extracts the core algorithms, model architecture, and training procedures using RAG + LLM, then generates annotated, runnable code blocks.
 
 ## How it works
 
@@ -19,7 +19,7 @@ Turn academic papers into working PyTorch implementations. Upload a PDF, TXT, or
 | Database | PostgreSQL via Drizzle ORM |
 | File storage | Supabase Storage |
 | Embeddings | Hugging Face Inference API |
-| Code generation | Ollama (local LLM) |
+| Code generation | Ollama (LLM) |
 | UI | Tailwind CSS v4 + shadcn/ui |
 
 ## Prerequisites

@@ -1,10 +1,16 @@
-import { Navbar } from "@/components/navbar";
+import { Navbar } from '@/components/navbar';
+import { BackToTop } from '@/components/back-to-top';
 
-export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-    return (
-        <>
-        <Navbar />
-        {children}
-        </>
-    );
+export default function DashboardLayout({
+	children,
+}: {
+	children: React.ReactNode;
+}) {
+	return (
+		<>
+			<Navbar />
+			{children}
+			<BackToTop />
+		</>
+	);
 }

@@ -22,8 +22,6 @@ export default async function CodePage({ params }: { params: Promise<{ paperId: 
     const initialBlocks = cached.status === "ok" ? cached.codeBlocks : null;
     const title = paperRow[0]?.title === '' ? paperRow[0].source : paperRow[0]?.title;
 
-    console.log(paperRow)
-
     return (
         <div className="min-h-[calc(100vh-65px)] bg-background bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-size-[24px_24px]">
             <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">

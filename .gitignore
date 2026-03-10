@@ -43,3 +43,6 @@ next-env.d.ts
 # uploaded papers
 /papers
 
+
+# clerk configuration (can include secrets)
+/.clerk/

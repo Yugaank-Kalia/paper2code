@@ -1,83 +1,72 @@
-import {
-  pgTable,
-  text,
-  timestamp,
-  integer,
-  jsonb
-} from "drizzle-orm/pg-core";
+import { user } from '@/src/db/auth-schema';
+import { pgTable, text, timestamp, integer, jsonb } from 'drizzle-orm/pg-core';
 
-export const users = pgTable("users", {
-  id: text("id").primaryKey(), // Clerk user ID
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow()
+export const papers = pgTable('papers', {
+	id: text('id').primaryKey(),
+	userId: text('user_id')
+		.notNull()
+		.references(() => user.id, { onDelete: 'cascade' }),
+
+	title: text('title'),
+	// array of author names
+	authors: jsonb('authors').$type<string[]>().notNull().default([]),
+
+	year: integer('year'),
+	doi: text('doi'),
+	source: text('source'), // e.g. "arxiv", "local_upload"
+
+	// array of tags
+	tags: jsonb('tags').$type<string[]>().default([]),
+
+	rawText: text('raw_text').notNull(),
+
+	createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+	updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
 });
 
-export const papers = pgTable("papers", {
-  id: text("id").primaryKey(),
-  userId: text("user_id")
-    .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
+export const chunks = pgTable('chunks', {
+	id: text('id').primaryKey(),
 
-  title: text("title"),
-  // array of author names
-  authors: jsonb("authors").$type<string[]>().notNull().default([]),
+	paperId: text('paper_id')
+		.notNull()
+		.references(() => papers.id, { onDelete: 'cascade' }),
 
-  year: integer("year"),
-  doi: text("doi"),
-  source: text("source"), // e.g. "arxiv", "local_upload"
+	userId: text('user_id')
+		.notNull()
+		.references(() => user.id, { onDelete: 'cascade' }),
 
-  // array of tags
-  tags: jsonb("tags").$type<string[]>().default([]),
+	chunkIndex: integer('chunk_index').notNull(), // order within paper
+	section: text('section'), // "abstract", "introduction", etc.
 
-  rawText: text("raw_text").notNull(),
+	text: text('text').notNull(),
 
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow()
+	// embedding stored as JSON array; swap to a vector type if you use pgvector
+	embedding: jsonb('embedding').$type<number[]>().notNull(),
+
+	tokens: integer('tokens'),
+
+	createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
 });
 
-export const chunks = pgTable("chunks", {
-  id: text("id").primaryKey(),
+export const generatedCode = pgTable('code', {
+	id: text('id').primaryKey(),
 
-  paperId: text("paper_id")
-    .notNull()
-    .references(() => papers.id, { onDelete: "cascade" }),
+	paperId: text('paper_id')
+		.notNull()
+		.references(() => papers.id, { onDelete: 'cascade' }),
 
-  userId: text("user_id")
-    .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
+	userId: text('user_id')
+		.notNull()
+		.references(() => user.id, { onDelete: 'cascade' }),
 
-  chunkIndex: integer("chunk_index").notNull(), // order within paper
-  section: text("section"), // "abstract", "introduction", etc.
+	// JSON array of { title, description, code } objects returned by the model
+	codeBlocks: jsonb('code_blocks')
+		.$type<{ title: string; description: string; code: string }[]>()
+		.notNull()
+		.default([]),
 
-  text: text("text").notNull(),
+	model: text('model'),
 
-  // embedding stored as JSON array; swap to a vector type if you use pgvector
-  embedding: jsonb("embedding").$type<number[]>().notNull(),
-
-  tokens: integer("tokens"),
-
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow()
-});
-
-export const generatedCode = pgTable("code", {
-  id: text("id").primaryKey(),
-
-  paperId: text("paper_id")
-    .notNull()
-    .references(() => papers.id, { onDelete: "cascade" }),
-
-  userId: text("user_id")
-    .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
-
-  // JSON array of { title, description, code } objects returned by the model
-  codeBlocks: jsonb("code_blocks")
-    .$type<{ title: string; description: string; code: string }[]>()
-    .notNull()
-    .default([]),
-
-  model: text("model"),
-
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow()
+	createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+	updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
 });

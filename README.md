@@ -10,17 +10,27 @@ Turn academic papers into working Python implementations. Upload a PDF, TXT, or 
 4. **Generate** — The retrieved context is fed to a local [Ollama](https://ollama.com) model, which returns structured JSON code blocks (title, description, Python code).
 5. **Cache** — Generated code blocks are persisted in Postgres so repeat visits are instant.
 
+## Features
+
+- **Demo video** — A "View Demo" button on the landing page opens an in-browser video walkthrough (`/demo.mp4`).
+- **Realtime analytics** — The landing page fetches live stats from the database: total number of code generations and total lines of code produced across all users.
+
+## Roadmap
+
+- [ ] Migrate authentication from Clerk to [better-auth](https://better-auth.com) for self-hosted, dependency-free auth
+- [ ] Add a notification system to alert users when code generation completes, since it can take a while
+
 ## Tech stack
 
-| Layer | Technology |
-|---|---|
-| Framework | Next.js 16 (App Router) |
-| Auth | Clerk |
-| Database | PostgreSQL via Drizzle ORM |
-| File storage | Supabase Storage |
-| Embeddings | Hugging Face Inference API |
-| Code generation | Ollama (LLM) |
-| UI | Tailwind CSS v4 + shadcn/ui |
+| Layer           | Technology                  |
+| --------------- | --------------------------- |
+| Framework       | Next.js 16 (App Router)     |
+| Auth            | Clerk                       |
+| Database        | PostgreSQL via Drizzle ORM  |
+| File storage    | Supabase Storage            |
+| Embeddings      | Hugging Face Inference API  |
+| Code generation | Ollama (LLM)                |
+| UI              | Tailwind CSS v4 + shadcn/ui |
 
 ## Prerequisites
 
@@ -83,16 +93,16 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 ```
 ├── app/
 │   ├── dashboard/
-│   │   ├── actions/          
-│   │   ├── chunks/[paperId]/ 
-│   │   ├── code/[paperId]/   
-│   │   └── pdf/[paperId]/    
+│   │   ├── actions/
+│   │   ├── chunks/[paperId]/
+│   │   ├── code/[paperId]/
+│   │   └── pdf/[paperId]/
 │   ├── sign-in/
 │   ├── sign-up/
 │   ├── layout.tsx
 │   └── page.tsx
-├── components/               
-├── lib/                      
+├── components/
+├── lib/
 ├── src/
 │   └── db/
 │       └── schema.ts
@@ -101,14 +111,14 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ## Scripts
 
-| Command | Description |
-|---|---|
-| `bun dev` | Start development server |
-| `bun build` | Production build |
-| `bun start` | Start production server |
-| `bun lint` | Run ESLint |
-| `bunx drizzle-kit push` | Push schema to database |
-| `bunx drizzle-kit studio` | Open Drizzle Studio |
+| Command                   | Description              |
+| ------------------------- | ------------------------ |
+| `bun dev`                 | Start development server |
+| `bun build`               | Production build         |
+| `bun start`               | Start production server  |
+| `bun lint`                | Run ESLint               |
+| `bunx drizzle-kit push`   | Push schema to database  |
+| `bunx drizzle-kit studio` | Open Drizzle Studio      |
 
 ## Credits
 

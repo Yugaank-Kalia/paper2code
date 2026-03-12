@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useAuth } from '@clerk/nextjs';
+import { useSession, signOut } from '@/lib/auth-client';
 import { toast } from 'sonner';
 import {
 	AlertDialog,
@@ -21,7 +21,9 @@ import { uploadArxiv } from '@/app/dashboard/actions/upload-arxiv';
 type Mode = 'file' | 'arxiv';
 
 export function UploadPaperDialog({ text }: { text: string }) {
-	const { isLoaded, userId } = useAuth();
+	const { data: session, isPending } = useSession();
+	const user = session?.user;
+
 	const [isOpen, setIsOpen] = useState(false);
 	const [isLoading, setIsLoading] = useState(false);
 	const [fileName, setFileName] = useState<string>('');
@@ -33,8 +35,8 @@ export function UploadPaperDialog({ text }: { text: string }) {
 	const router = useRouter();
 
 	const handleGetStartedClick = () => {
-		if (!isLoaded) return;
-		if (!userId) {
+		if (isPending) return;
+		if (!user?.id) {
 			router.push('/sign-up');
 			return;
 		}

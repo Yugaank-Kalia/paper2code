@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
-import { auth } from '@clerk/nextjs/server';
+import { auth } from '@/lib/auth';
+import { headers } from 'next/headers';
 import { db } from '@/index';
 import { generatedCode } from '@/src/db/schema';
 import { sql } from 'drizzle-orm';
@@ -22,8 +23,11 @@ import {
 } from 'lucide-react';
 
 export default async function Page() {
-	const { userId } = await auth();
+	const session = await auth.api.getSession({
+		headers: await headers(),
+	});
 
+	const userId = session?.user.id;
 	if (userId) {
 		redirect('/dashboard');
 	}

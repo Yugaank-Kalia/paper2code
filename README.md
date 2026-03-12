@@ -18,7 +18,7 @@ Turn academic papers into working Python implementations. Upload a PDF, TXT, or 
 ## Roadmap
 
 - [x] Migrate authentication from Clerk to [better-auth](https://better-auth.com) for self-hosted, dependency-free auth
-- [ ] Add a notification system to alert users when code generation completes, since it can take a while
+- [x] Add a notification system to alert users when code generation completes, since it can take a while
 
 ## Tech stack
 
@@ -92,20 +92,32 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ```
 ├── app/
+│   ├── api/
+│   │   └── auth/
+│   │       └── [...all]/
+│   │           └── route.ts
 │   ├── dashboard/
 │   │   ├── actions/
 │   │   ├── chunks/[paperId]/
 │   │   ├── code/[paperId]/
 │   │   └── pdf/[paperId]/
+│   ├── settings/
+│   │   ├── actions/
+│   │   └── page.tsx
 │   ├── sign-in/
 │   ├── sign-up/
 │   ├── layout.tsx
 │   └── page.tsx
 ├── components/
+│   └── ui/
 ├── lib/
+│   ├── auth.ts
+│   └── auth-client.ts
 ├── src/
 │   └── db/
-│       └── schema.ts
+│       ├── auth-schema.ts
+│       ├── schema.ts
+│       └── relations.ts
 └── drizzle/
 ```
 

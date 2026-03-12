@@ -26,7 +26,7 @@ async function fetchArxivMeta(
 	const bare = arxivId.replace(/v\d+$/, ''); // strip version for API lookup
 	const url = `https://export.arxiv.org/api/query?id_list=${bare}`;
 	const res = await fetch(url, {
-		headers: { 'User-Agent': 'paper-to-code/1.0 (research tool)' },
+		headers: { 'User-Agent': 'paper2code/1.0 (research tool)' },
 	});
 	if (!res.ok) return { authors: [], year: null };
 
@@ -106,7 +106,7 @@ export async function uploadArxiv(
 		}
 
 		const response = await fetch(pdfUrl, {
-			headers: { 'User-Agent': 'paper-to-code/1.0 (research tool)' },
+			headers: { 'User-Agent': 'paper2code/1.0 (research tool)' },
 		});
 
 		if (!response.ok) {

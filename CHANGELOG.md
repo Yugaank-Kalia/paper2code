@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased]
+## [Released]
 
 - Notification system to alert users when code generation completes
 

@@ -1,12 +1,13 @@
 import { relations } from 'drizzle-orm';
 import { user, session, account } from './auth-schema';
-import { papers, chunks, generatedCode } from './schema';
+import { papers, chunks, generatedCode, notifications } from './schema';
 
 export const userRelations = relations(user, ({ many }) => ({
 	sessions: many(session, { relationName: 'userSessions' }),
 	accounts: many(account, { relationName: 'userAccounts' }),
 	papers: many(papers, { relationName: 'userPapers' }),
 	chunks: many(chunks, { relationName: 'userChunks' }),
+	notifications: many(notifications, { relationName: 'userNotifications' }),
 	generatedCode: many(generatedCode, { relationName: 'userGeneratedCode' }),
 }));
 
@@ -58,6 +59,14 @@ export const generatedCodeRelations = relations(generatedCode, ({ one }) => ({
 	user: one(user, {
 		relationName: 'userGeneratedCode',
 		fields: [generatedCode.userId],
+		references: [user.id],
+	}),
+}));
+
+export const notificationsRelations = relations(notifications, ({ one }) => ({
+	user: one(user, {
+		relationName: 'userNotifications',
+		fields: [notifications.userId],
 		references: [user.id],
 	}),
 }));

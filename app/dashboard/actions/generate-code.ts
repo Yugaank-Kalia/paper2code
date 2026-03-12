@@ -1,14 +1,15 @@
 'use server';
 
+import { Ollama } from 'ollama';
 import { auth } from '@/lib/auth';
+import { randomUUID } from 'crypto';
 import { headers } from 'next/headers';
-import { eq, and } from 'drizzle-orm';
-import { db } from '@/index';
-import { chunks, generatedCode } from '@/src/db/schema';
 import { embedText } from '@/lib/embeddings';
 import { cosineSimilarity } from '@/lib/vector';
-import { randomUUID } from 'crypto';
-import { Ollama } from 'ollama';
+
+import { db } from '@/index';
+import { eq, and } from 'drizzle-orm';
+import { chunks, generatedCode, notifications, papers } from '@/src/db/schema';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -19,46 +20,46 @@ export type CodeBlock = {
 };
 
 export type GenerateCodeResult =
+	| { status: 'pending' }
 	| { status: 'unauthorized' }
 	| { status: 'error'; message: string }
 	| { status: 'ok'; codeBlocks: CodeBlock[] };
 
 // ── Cache lookup (fast) ───────────────────────────────────────────────────────
 
+// actions/generate-code.ts
 export async function getGeneratedCode(
 	paperId: string,
-): Promise<GenerateCodeResult> {
-	const session = await auth.api.getSession({
-		headers: await headers(),
-	});
+): Promise<
+	| { status: 'ok'; codeBlocks: CodeBlock[] }
+	| { status: 'pending' }
+	| { status: 'error'; message: string }
+	| { status: 'not_found' }
+	| { status: 'unauthorized' }
+> {
+	const session = await auth.api.getSession({ headers: await headers() });
+	if (!session) return { status: 'unauthorized' as const };
 
-	if (!session) return { status: 'unauthorized' };
-	const userId = session.user.id;
+	const cached = await db
+		.select()
+		.from(generatedCode)
+		.where(
+			and(
+				eq(generatedCode.paperId, paperId),
+				eq(generatedCode.userId, session.user.id),
+				eq(generatedCode.status, 'done'),
+			),
+		)
+		.limit(1);
 
-	try {
-		const cached = await db
-			.select()
-			.from(generatedCode)
-			.where(
-				and(
-					eq(generatedCode.paperId, paperId),
-					eq(generatedCode.userId, userId),
-				),
-			)
-			.limit(1);
-
-		if (cached.length > 0) {
-			return {
-				status: 'ok',
-				codeBlocks: cached[0].codeBlocks as CodeBlock[],
-			};
-		}
-
-		return { status: 'error', message: 'not_found' };
-	} catch (err) {
-		const message = err instanceof Error ? err.message : String(err);
-		return { status: 'error', message };
+	if (cached.length > 0 && cached[0].codeBlocks != null) {
+		return {
+			status: 'ok' as const,
+			codeBlocks: cached[0].codeBlocks as CodeBlock[],
+		};
 	}
+
+	return { status: 'not_found' as const };
 }
 
 // ── Config ────────────────────────────────────────────────────────────────────
@@ -175,7 +176,7 @@ export async function generateCode(
 	const userId = session.user.id;
 
 	try {
-		// 0. Return cached result if it already exists
+		// 0. Return cached result if already done
 		const cached = await db
 			.select()
 			.from(generatedCode)
@@ -183,6 +184,7 @@ export async function generateCode(
 				and(
 					eq(generatedCode.paperId, paperId),
 					eq(generatedCode.userId, userId),
+					eq(generatedCode.status, 'done'),
 				),
 			)
 			.limit(1);
@@ -194,10 +196,57 @@ export async function generateCode(
 			};
 		}
 
-		// 1. Embed the query prompt
+		// 1. Get paper title for notification
+		const paper = await db
+			.select({ title: papers.title })
+			.from(papers)
+			.where(eq(papers.id, paperId))
+			.limit(1);
+		const paperTitle = paper[0]?.title;
+
+		const existing = await db
+			.select({ id: generatedCode.id, status: generatedCode.status })
+			.from(generatedCode)
+			.where(
+				and(
+					eq(generatedCode.paperId, paperId),
+					eq(generatedCode.userId, userId),
+				),
+			)
+			.limit(1);
+
+		// if already pending or done, don't start again
+		if (existing.length > 0) {
+			if (existing[0].status === 'done') {
+				const row = await db
+					.select()
+					.from(generatedCode)
+					.where(eq(generatedCode.id, existing[0].id))
+					.limit(1);
+				return {
+					status: 'ok',
+					codeBlocks: row[0].codeBlocks as CodeBlock[],
+				};
+			}
+			if (existing[0].status === 'pending') {
+				return { status: 'pending' as const };
+			}
+		}
+
+		// 2. Insert pending row
+		const codeId = randomUUID();
+		await db.insert(generatedCode).values({
+			id: codeId,
+			paperId,
+			userId,
+			status: 'pending',
+			model: process.env.QUERY_MODEL,
+		});
+
+		// 3. Embed the query prompt
 		const queryEmbedding = await embedText(QUERY_PROMPT);
 
-		// 2. Fetch all chunks for the paper
+		// 4. Fetch all chunks for the paper
 		const allChunks = await db
 			.select({
 				id: chunks.id,
@@ -211,18 +260,32 @@ export async function generateCode(
 			.where(eq(chunks.paperId, paperId));
 
 		if (allChunks.length === 0) {
+			await db
+				.update(generatedCode)
+				.set({ status: 'error', updatedAt: new Date() })
+				.where(eq(generatedCode.id, codeId));
+
+			await db.insert(notifications).values({
+				id: randomUUID(),
+				userId,
+				paperId,
+				title: 'Generation failed',
+				description: `${paperTitle} — no chunks found.`,
+				status: 'error',
+			});
+
 			return {
 				status: 'error',
 				message: `No chunks found for paper ${paperId}`,
 			};
 		}
 
-		// 3. Drop reference/bibliography chunks
+		// 5. Drop reference/bibliography chunks
 		const contentChunks = allChunks.filter(
 			(c) => !isReferenceChunk(c.text),
 		);
 
-		// 4. Score via cosine similarity and take top-K
+		// 6. Score via cosine similarity and take top-K
 		const topChunks = contentChunks
 			.map((chunk) => ({
 				chunkIndex: chunk.chunkIndex,
@@ -236,35 +299,45 @@ export async function generateCode(
 			.sort((a, b) => b.similarity - a.similarity)
 			.slice(0, TOP_K);
 
-		// 5. Generate code from top-K chunks
-		const model = process.env.QUERY_MODEL;
+		// 7. Generate code from top-K chunks
 		const codeBlocks = await callOllama(topChunks);
 
-		// 6. Persist to DB — re-check first to avoid duplicate rows from concurrent calls
-		const alreadySaved = await db
-			.select({ id: generatedCode.id })
-			.from(generatedCode)
-			.where(
-				and(
-					eq(generatedCode.paperId, paperId),
-					eq(generatedCode.userId, userId),
-				),
-			)
-			.limit(1);
-
-		if (alreadySaved.length === 0) {
-			await db.insert(generatedCode).values({
-				id: randomUUID(),
-				paperId,
-				userId,
+		// 8. Update row to done
+		await db
+			.update(generatedCode)
+			.set({
 				codeBlocks,
-				model,
-			});
-		}
+				status: 'done',
+				updatedAt: new Date(),
+			})
+			.where(eq(generatedCode.id, codeId));
+
+		// 9. Insert success notification
+		await db.insert(notifications).values({
+			id: randomUUID(),
+			userId,
+			paperId,
+			title: 'Code generation complete',
+			description: `${paperTitle} — ${codeBlocks.length} code blocks generated.`,
+			status: 'success',
+		});
 
 		return { status: 'ok', codeBlocks };
 	} catch (err) {
 		const message = err instanceof Error ? err.message : String(err);
+
+		// insert error notification on unexpected failure
+		await db
+			.insert(notifications)
+			.values({
+				id: randomUUID(),
+				userId,
+				title: 'Generation failed',
+				description: `An unexpected error occurred. Please try again.`,
+				status: 'error',
+			})
+			.catch(() => {}); // don't throw if notif insert fails
+
 		return { status: 'error', message };
 	}
 }

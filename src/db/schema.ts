@@ -1,5 +1,12 @@
 import { user } from '@/src/db/auth-schema';
-import { pgTable, text, timestamp, integer, jsonb } from 'drizzle-orm/pg-core';
+import {
+	pgTable,
+	text,
+	timestamp,
+	integer,
+	jsonb,
+	boolean,
+} from 'drizzle-orm/pg-core';
 
 export const papers = pgTable('papers', {
 	id: text('id').primaryKey(),
@@ -59,14 +66,31 @@ export const generatedCode = pgTable('code', {
 		.notNull()
 		.references(() => user.id, { onDelete: 'cascade' }),
 
-	// JSON array of { title, description, code } objects returned by the model
-	codeBlocks: jsonb('code_blocks')
-		.$type<{ title: string; description: string; code: string }[]>()
-		.notNull()
-		.default([]),
+	codeBlocks:
+		jsonb('code_blocks').$type<
+			{ title: string; description: string; code: string }[]
+		>(),
+	status: text('status').notNull(),
 
 	model: text('model'),
 
 	createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
 	updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+});
+
+export const notifications = pgTable('notifications', {
+	id: text('id').primaryKey(),
+	userId: text('user_id')
+		.notNull()
+		.references(() => user.id, { onDelete: 'cascade' }),
+	paperId: text('paper_id').references(() => papers.id, {
+		onDelete: 'set null',
+	}),
+
+	title: text('title').notNull(),
+	description: text('description').notNull(),
+	status: text('status').notNull(),
+	read: boolean('read').notNull().default(false),
+
+	createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
 });

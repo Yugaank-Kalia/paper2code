@@ -1,4 +1,3 @@
-import { papers, chunks, generatedCode } from '@/src/db/schema';
 import { pgTable, text, timestamp, boolean, index } from 'drizzle-orm/pg-core';
 
 export const user = pgTable('user', {

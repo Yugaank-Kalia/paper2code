@@ -19,11 +19,11 @@ export const metadata: Metadata = {
 	metadataBase: new URL(
 		process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000',
 	),
-	title: 'paper-to-code',
+	title: 'paper2code',
 	description:
 		'Turn academic papers into working Python implementations using RAG and a LLM.',
 	openGraph: {
-		title: 'paper-to-code',
+		title: 'paper2code',
 		description:
 			'Turn academic papers into working Python implementations using RAG and a LLM.',
 		type: 'website',
@@ -32,13 +32,13 @@ export const metadata: Metadata = {
 				url: '/open-graph.png',
 				width: 1482,
 				height: 1886,
-				alt: 'paper-to-code',
+				alt: 'paper2code',
 			},
 		],
 	},
 	twitter: {
 		card: 'summary_large_image',
-		title: 'paper-to-code',
+		title: 'paper2code',
 		description:
 			'Turn academic papers into working Python implementations using RAG and a local LLM.',
 		images: ['/open-graph.png'],

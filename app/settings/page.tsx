@@ -79,16 +79,27 @@ export default function SettingsPage() {
 	const [showNewPassword, setShowNewPassword] = useState(false);
 	const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
+	const [providersLoading, setProvidersLoading] = useState(true);
+	const [linkedProviders, setLinkedProviders] = useState<string[]>([]);
+
 	// Danger
 	const [deleteLoading, setDeleteLoading] = useState(false);
-
 	useEffect(() => {
 		if (!isPending && !session) {
 			router.push('/');
 		}
 	}, [isPending, session, router]);
 
-	if (isPending) {
+	useEffect(() => {
+		authClient.listAccounts().then(({ data }) => {
+			if (data) {
+				setLinkedProviders(data.map((a) => a.providerId));
+			}
+			setProvidersLoading(false);
+		});
+	}, [session]);
+
+	if (isPending || providersLoading) {
 		return (
 			<div className='flex h-screen items-center justify-center'>
 				<Loader2 className='h-12 w-12 animate-spin text-primary' />
@@ -274,149 +285,169 @@ export default function SettingsPage() {
 					<Separator />
 
 					{/* Password */}
-					<form onSubmit={handleUpdatePassword} className='space-y-3'>
-						<div className='space-y-1'>
-							<Label htmlFor='currentPassword'>
-								Current Password
-							</Label>
-							<div className='relative'>
-								<Input
-									id='currentPassword'
-									type={
-										showCurrentPassword
-											? 'text'
-											: 'password'
-									}
-									value={currentPassword}
-									onChange={(e) =>
-										setCurrentPassword(e.target.value)
-									}
-									className='pr-10'
-								/>
-								<button
-									type='button'
-									onClick={() =>
-										setShowCurrentPassword((v) => !v)
-									}
-									className='absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors'
-								>
-									{showCurrentPassword ? (
-										<EyeOff className='h-4 w-4' />
-									) : (
-										<Eye className='h-4 w-4' />
-									)}
-								</button>
-							</div>
-						</div>
-
-						<div className='space-y-1'>
-							<Label htmlFor='newPassword'>New Password</Label>
-							<div className='relative'>
-								<Input
-									id='newPassword'
-									type={showNewPassword ? 'text' : 'password'}
-									value={newPassword}
-									onChange={(e) =>
-										setNewPassword(e.target.value)
-									}
-									className='pr-10'
-								/>
-								<button
-									type='button'
-									onClick={() =>
-										setShowNewPassword((v) => !v)
-									}
-									className='absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors'
-								>
-									{showNewPassword ? (
-										<EyeOff className='h-4 w-4' />
-									) : (
-										<Eye className='h-4 w-4' />
-									)}
-								</button>
-							</div>
-						</div>
-
-						<div className='space-y-1'>
-							<Label htmlFor='confirmPassword'>
-								Confirm New Password
-							</Label>
-							<div className='relative'>
-								<Input
-									id='confirmPassword'
-									type={
-										showConfirmPassword
-											? 'text'
-											: 'password'
-									}
-									value={confirmPassword}
-									onChange={(e) =>
-										setConfirmPassword(e.target.value)
-									}
-									className='pr-10'
-								/>
-								<button
-									type='button'
-									onClick={() =>
-										setShowConfirmPassword((v) => !v)
-									}
-									className='absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors'
-								>
-									{showConfirmPassword ? (
-										<EyeOff className='h-4 w-4' />
-									) : (
-										<Eye className='h-4 w-4' />
-									)}
-								</button>
-							</div>
-						</div>
-
-						<Button
-							type='button'
-							variant='ghost'
-							disabled={
-								passwordLoading ||
-								(!currentPassword &&
-									!newPassword &&
-									!confirmPassword)
-							}
-							onClick={() => {
-								setCurrentPassword('');
-								setNewPassword('');
-								setConfirmPassword('');
-								setShowCurrentPassword(false);
-								setShowNewPassword(false);
-								setShowConfirmPassword(false);
-							}}
+					{linkedProviders.includes('credential') && (
+						<form
+							onSubmit={handleUpdatePassword}
+							className='space-y-3'
 						>
-							Reset
-						</Button>
-						<Button
-							type='submit'
-							variant='outline'
-							disabled={
-								passwordLoading ||
-								!currentPassword ||
-								!newPassword ||
-								!confirmPassword
-							}
-						>
-							{passwordLoading ? (
-								<Loader2 className='h-4 w-4 animate-spin' />
-							) : (
-								'Update Password'
-							)}
-						</Button>
-					</form>
+							<div className='space-y-1'>
+								<Label htmlFor='currentPassword'>
+									Current Password
+								</Label>
+								<div className='relative'>
+									<Input
+										id='currentPassword'
+										type={
+											showCurrentPassword
+												? 'text'
+												: 'password'
+										}
+										value={currentPassword}
+										onChange={(e) =>
+											setCurrentPassword(e.target.value)
+										}
+										className='pr-10'
+									/>
+									<button
+										type='button'
+										onClick={() =>
+											setShowCurrentPassword((v) => !v)
+										}
+										className='absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors'
+									>
+										{showCurrentPassword ? (
+											<EyeOff className='h-4 w-4' />
+										) : (
+											<Eye className='h-4 w-4' />
+										)}
+									</button>
+								</div>
+							</div>
+
+							<div className='space-y-1'>
+								<Label htmlFor='newPassword'>
+									New Password
+								</Label>
+								<div className='relative'>
+									<Input
+										id='newPassword'
+										type={
+											showNewPassword
+												? 'text'
+												: 'password'
+										}
+										value={newPassword}
+										onChange={(e) =>
+											setNewPassword(e.target.value)
+										}
+										className='pr-10'
+									/>
+									<button
+										type='button'
+										onClick={() =>
+											setShowNewPassword((v) => !v)
+										}
+										className='absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors'
+									>
+										{showNewPassword ? (
+											<EyeOff className='h-4 w-4' />
+										) : (
+											<Eye className='h-4 w-4' />
+										)}
+									</button>
+								</div>
+							</div>
+
+							<div className='space-y-1'>
+								<Label htmlFor='confirmPassword'>
+									Confirm New Password
+								</Label>
+								<div className='relative'>
+									<Input
+										id='confirmPassword'
+										type={
+											showConfirmPassword
+												? 'text'
+												: 'password'
+										}
+										value={confirmPassword}
+										onChange={(e) =>
+											setConfirmPassword(e.target.value)
+										}
+										className='pr-10'
+									/>
+									<button
+										type='button'
+										onClick={() =>
+											setShowConfirmPassword((v) => !v)
+										}
+										className='absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors'
+									>
+										{showConfirmPassword ? (
+											<EyeOff className='h-4 w-4' />
+										) : (
+											<Eye className='h-4 w-4' />
+										)}
+									</button>
+								</div>
+							</div>
+
+							<div className='flex gap-2'>
+								<Button
+									type='button'
+									variant='ghost'
+									disabled={
+										passwordLoading ||
+										(!currentPassword &&
+											!newPassword &&
+											!confirmPassword)
+									}
+									onClick={() => {
+										setCurrentPassword('');
+										setNewPassword('');
+										setConfirmPassword('');
+										setShowCurrentPassword(false);
+										setShowNewPassword(false);
+										setShowConfirmPassword(false);
+									}}
+								>
+									Reset
+								</Button>
+								<Button
+									type='submit'
+									variant='outline'
+									disabled={
+										passwordLoading ||
+										!currentPassword ||
+										!newPassword ||
+										!confirmPassword
+									}
+								>
+									{passwordLoading ? (
+										<Loader2 className='h-4 w-4 animate-spin' />
+									) : (
+										'Update Password'
+									)}
+								</Button>
+							</div>
+						</form>
+					)}
+
+					{!linkedProviders.includes('credential') && (
+						<p className='text-base tracking-tighter text-muted-foreground font-semibold'>
+							You signed in with {linkedProviders} no password to
+							update.
+						</p>
+					)}
 				</CardContent>
 			</Card>
 
 			{/* ── Connected Accounts ── */}
-			<Card>
+			{/* <Card>
 				<CardHeader>
-					<CardTitle>Connected Accounts</CardTitle>
+					<CardTitle>Connect Accounts</CardTitle>
 					<CardDescription>
-						Manage your linked OAuth providers
+						Manage or link OAuth providers
 					</CardDescription>
 				</CardHeader>
 				<CardContent className='space-y-3'>
@@ -470,7 +501,7 @@ export default function SettingsPage() {
 						</Button>
 					</div>
 				</CardContent>
-			</Card>
+			</Card> */}
 
 			{/* ── Danger Zone ── */}
 			<Card className='border-destructive/50'>

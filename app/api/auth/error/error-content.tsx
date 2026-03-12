@@ -50,13 +50,13 @@ export default function AuthErrorContent() {
 				</div>
 				<div className='flex flex-col gap-2'>
 					<Button onClick={() => router.push('/sign-in')}>
-						Back to Sign In
+						Back to Settings
 					</Button>
 					<Button
 						variant='ghost'
 						onClick={() => router.push('/settings')}
 					>
-						Go to Settings
+						Go to Sign In
 					</Button>
 				</div>
 			</div>

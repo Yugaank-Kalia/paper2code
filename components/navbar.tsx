@@ -9,6 +9,7 @@ import { ThemeToggle } from './theme-toggle';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import UserButton from './user-button';
+import { Notifications } from './notifications';
 
 export function Navbar() {
 	const { data: session, isPending } = useSession();
@@ -32,6 +33,7 @@ export function Navbar() {
 				</Link>
 				<div className='flex items-center gap-4'>
 					<ThemeToggle />
+					<Notifications />
 					{!ready ? (
 						<div className='flex items-center gap-3'>
 							<Skeleton className='h-8 w-24 rounded-md' />

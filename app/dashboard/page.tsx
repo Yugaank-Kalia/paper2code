@@ -95,14 +95,16 @@ export default async function DashboardPage() {
 												<BookOpenIcon className='h-5 w-5 text-primary' />
 											</div>
 											<div className='flex-1 min-w-0'>
-												<CardTitle className='text-base leading-snug line-clamp-2'>
+												<CardTitle className='text-base leading-snug line-clamp-1'>
 													{paper.title ||
 														paper.source}
 												</CardTitle>
 												{paper.source && (
 													<CardDescription className='mt-1 flex items-center gap-1 text-xs'>
 														<Laptop className='h-3 w-3' />
-														{paper.source}
+														<span className='line-clamp-1'>
+															{paper.source}
+														</span>
 													</CardDescription>
 												)}
 											</div>

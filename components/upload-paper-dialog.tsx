@@ -97,6 +97,7 @@ export function UploadPaperDialog({ text }: { text: string }) {
 			toast.success('Paper uploaded successfully!', {
 				description: `${result.originalName} (${(result.size / 1024 / 1024).toFixed(2)} MB)`,
 			});
+			router.refresh();
 		} catch (error) {
 			console.error('Upload error:', error);
 			toast.error('Failed to upload paper', {
@@ -136,6 +137,7 @@ export function UploadPaperDialog({ text }: { text: string }) {
 			toast.success('arXiv paper imported!', {
 				description: result.title,
 			});
+			router.refresh();
 		} catch (error) {
 			console.error('arXiv import error:', error);
 			toast.error('Failed to import arXiv paper', {
@@ -210,15 +212,17 @@ export function UploadPaperDialog({ text }: { text: string }) {
 										<div className='flex flex-col items-center justify-center pt-5 pb-6'>
 											<Upload className='h-8 w-8 text-muted-foreground mb-2' />
 											<p className='text-sm text-muted-foreground'>
-												{fileName ||
-													'Click to upload or drag and drop'}
+												{fileName
+													? 'File selected'
+													: 'Click to upload or drag and drop'}
 											</p>
 											{fileName && (
-												<p className='text-xs text-primary mt-1'>
+												<p className='text-xs text-primary mt-1 max-w-50 truncate text-center'>
 													{fileName}
 												</p>
 											)}
 										</div>
+
 										<Input
 											id='paper-upload'
 											name='paper'

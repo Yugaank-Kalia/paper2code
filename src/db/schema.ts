@@ -6,6 +6,7 @@ import {
 	integer,
 	jsonb,
 	boolean,
+	unique,
 } from 'drizzle-orm/pg-core';
 
 export const papers = pgTable('papers', {
@@ -55,28 +56,34 @@ export const chunks = pgTable('chunks', {
 	createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
 });
 
-export const generatedCode = pgTable('code', {
-	id: text('id').primaryKey(),
+export const generatedCode = pgTable(
+	'code',
+	{
+		id: text('id').primaryKey(),
 
-	paperId: text('paper_id')
-		.notNull()
-		.references(() => papers.id, { onDelete: 'cascade' }),
+		paperId: text('paper_id')
+			.notNull()
+			.references(() => papers.id, { onDelete: 'cascade' }),
 
-	userId: text('user_id')
-		.notNull()
-		.references(() => user.id, { onDelete: 'cascade' }),
+		userId: text('user_id')
+			.notNull()
+			.references(() => user.id, { onDelete: 'cascade' }),
 
-	codeBlocks:
-		jsonb('code_blocks').$type<
-			{ title: string; description: string; code: string }[]
-		>(),
-	status: text('status').notNull(),
+		codeBlocks:
+			jsonb('code_blocks').$type<
+				{ title: string; description: string; code: string }[]
+			>(),
+		status: text('status').notNull(),
 
-	model: text('model'),
+		model: text('model'),
 
-	createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
-	updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
-});
+		createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+		updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+	},
+	(table) => [
+		unique('code_paper_user_unique').on(table.paperId, table.userId), // ✅
+	],
+);
 
 export const notifications = pgTable('notifications', {
 	id: text('id').primaryKey(),

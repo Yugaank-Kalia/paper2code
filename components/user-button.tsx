@@ -10,6 +10,7 @@ import {
 	PopoverTrigger,
 } from '@/components/ui/popover';
 import { Separator } from '@/components/ui/separator';
+import { useState } from 'react';
 
 export default function UserButton() {
 	const { data: session, isPending } = authClient.useSession();
@@ -33,8 +34,10 @@ export default function UserButton() {
 		router.push('/');
 	}
 
+	const [open, setOpen] = useState(false);
+
 	return (
-		<Popover>
+		<Popover open={open} onOpenChange={setOpen}>
 			<PopoverTrigger asChild className='cursor-pointer'>
 				<button className='flex items-center gap-1.5 rounded-full pl-1 pr-2 py-1 hover:bg-muted transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'>
 					<Avatar className='h-10 w-10'>
@@ -79,7 +82,10 @@ export default function UserButton() {
 
 				<div className='p-1'>
 					<button
-						onClick={() => router.push('/settings')}
+						onClick={() => {
+							router.push('/settings');
+							setOpen(false);
+						}}
 						className='cursor-pointer flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-xs hover:bg-muted transition-colors text-left'
 					>
 						<Settings className='h-3.5 w-3.5 text-muted-foreground' />

@@ -46,6 +46,11 @@ export function CodeViewer({ code, language = 'python' }: CodeViewerProps) {
 				showLineNumbers
 				theme={dracula}
 				wrapLongLines={false}
+				customStyle={{
+					padding: '1rem',
+					fontFamily: 'var(--font-fira-code), monospace',
+					fontSize: '0.8rem',
+				}}
 			/>
 		</div>
 	);

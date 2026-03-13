@@ -1,8 +1,23 @@
 # Changelog
 
-## [Released]
+## [Latest]
 
-- Notification system to alert users when code generation completes
+### Added
+
+- Notification system — bell icon in the navbar with unread badge; users are alerted when code generation completes or fails, with a direct link to the result
+- Retry button on code generation failure or empty result
+- Auto-polling — code page polls every 5s and updates automatically when generation finishes
+- Unique constraint on `(paper_id, user_id)` in the `code` table to prevent duplicate generation rows
+- `status` column on generated code rows (`pending` | `done` | `error`) for lifecycle tracking
+- `paper_id` foreign key on notifications for direct navigation to results
+- Fira Code font for code blocks
+
+### Changed
+
+- Code generation now inserts a `pending` row before starting and updates to `done` or `error` on completion
+- Notifications are only marked success when code blocks are non-empty; empty results trigger an error notification
+- `getGeneratedCode` returns `empty` status for done rows with no blocks — prevents auto-regeneration on reload
+- Retry flow deletes the stale row before reinserting to avoid conflicts
 
 ## [Released]
 

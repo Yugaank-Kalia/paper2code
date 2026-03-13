@@ -8,7 +8,6 @@ export default function DashboardLayout({
 }) {
 	return (
 		<>
-			<Navbar />
 			{children}
 			<BackToTop />
 		</>

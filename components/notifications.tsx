@@ -135,7 +135,7 @@ export function Notifications() {
 				</div>
 
 				{/* List */}
-				<ScrollArea className='max-h-80'>
+				<ScrollArea className='h-auto'>
 					{loading ? (
 						<div className='flex items-center justify-center py-10'>
 							<p className='text-sm text-muted-foreground'>

@@ -4,6 +4,8 @@
 
 ### Added
 
+- Mobile-responsive navbar — notifications, theme toggle, and dashboard button collapse into the user button popover on small screens
+- Notifications page (`/notifications`) with pagination and rows-per-page selector
 - Notification system — bell icon in the navbar with unread badge; users are alerted when code generation completes or fails, with a direct link to the result
 - Retry button on code generation failure or empty result
 - Auto-polling — code page polls every 5s and updates automatically when generation finishes

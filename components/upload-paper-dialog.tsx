@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useSession } from '@/lib/auth-client';
 import { toast } from 'sonner';
 
@@ -34,8 +34,10 @@ export function UploadPaperDialog({ text }: { text: string }) {
 	const [mode, setMode] = useState<Mode>('file');
 	const [arxivInput, setArxivInput] = useState('');
 	const [arxivTitle, setArxivTitle] = useState('');
+	const [isDragging, setIsDragging] = useState(false);
 
 	const router = useRouter();
+	const fileInputRef = useRef<HTMLInputElement | null>(null);
 
 	const handleGetStartedClick = () => {
 		if (isPending) return;
@@ -60,7 +62,60 @@ export function UploadPaperDialog({ text }: { text: string }) {
 		const file = e.target.files?.[0];
 		if (file) {
 			setFileName(file.name);
+		} else {
+			setFileName('');
 		}
+	};
+
+	const handleDragEnter = (e: React.DragEvent<HTMLLabelElement>) => {
+		e.preventDefault();
+		e.stopPropagation();
+		if (isLoading) return;
+		setIsDragging(true);
+	};
+
+	const handleDragOver = (e: React.DragEvent<HTMLLabelElement>) => {
+		e.preventDefault();
+		e.stopPropagation();
+		if (isLoading) return;
+		// Just keep the drag active
+	};
+
+	const handleDragLeave = (e: React.DragEvent<HTMLLabelElement>) => {
+		e.preventDefault();
+		e.stopPropagation();
+		setIsDragging(false);
+	};
+
+	const handleDrop = (e: React.DragEvent<HTMLLabelElement>) => {
+		e.preventDefault();
+		e.stopPropagation();
+		setIsDragging(false);
+		if (isLoading) return;
+
+		const file = e.dataTransfer.files?.[0];
+		if (!file) return;
+
+		// Optionally enforce same types as `accept`
+		if (
+			!['application/pdf', 'text/plain', 'text/markdown'].includes(
+				file.type,
+			)
+		) {
+			toast.error('Unsupported file type', {
+				description: 'Please upload a PDF, TXT, or MD file',
+			});
+			return;
+		}
+
+		// Set the file into the hidden input so your existing form logic continues to work
+		if (fileInputRef.current) {
+			const dataTransfer = new DataTransfer();
+			dataTransfer.items.add(file);
+			fileInputRef.current.files = dataTransfer.files;
+		}
+
+		setFileName(file.name);
 	};
 
 	const handleUpload = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -96,7 +151,6 @@ export function UploadPaperDialog({ text }: { text: string }) {
 			setIsOpen(false);
 			setFileName('');
 			setFileTitle('');
-			router.push(`/dashboard`);
 			toast.success('Paper uploaded successfully!', {
 				description: `${result.originalName} (${(result.size / 1024 / 1024).toFixed(2)} MB)`,
 			});
@@ -136,7 +190,6 @@ export function UploadPaperDialog({ text }: { text: string }) {
 			setIsOpen(false);
 			setArxivInput('');
 			setArxivTitle('');
-			router.push(`/dashboard`);
 			toast.success('arXiv paper imported!', {
 				description: result.title,
 			});
@@ -170,7 +223,6 @@ export function UploadPaperDialog({ text }: { text: string }) {
 					</AlertDialogDescription>
 				</AlertDialogHeader>
 
-				{/* Mode toggle */}
 				<Tabs value={mode} onValueChange={(v) => setMode(v as Mode)}>
 					<TabsList className='w-full'>
 						<TabsTrigger
@@ -196,7 +248,17 @@ export function UploadPaperDialog({ text }: { text: string }) {
 							<div className='flex items-center justify-center w-full'>
 								<label
 									htmlFor='paper-upload'
-									className='flex flex-col items-center justify-center w-full h-64 border-2 border-dashed border-border rounded-lg cursor-pointer bg-muted/30 hover:bg-muted/50 transition'
+									className={[
+										'flex flex-col items-center justify-center w-full h-64 border-2 border-dashed rounded-lg cursor-pointer transition',
+										'bg-muted/30 hover:bg-muted/50',
+										isDragging
+											? 'border-primary bg-muted/50'
+											: 'border-border',
+									].join(' ')}
+									onDragEnter={handleDragEnter}
+									onDragOver={handleDragOver}
+									onDragLeave={handleDragLeave}
+									onDrop={handleDrop}
 								>
 									{isLoading ? (
 										<div className='flex h-full w-full flex-col items-center justify-center gap-2'>
@@ -210,9 +272,11 @@ export function UploadPaperDialog({ text }: { text: string }) {
 											<div className='flex flex-col items-center justify-center pt-5 pb-6'>
 												<Upload className='h-8 w-8 text-muted-foreground mb-2' />
 												<p className='text-sm text-muted-foreground'>
-													{fileName
-														? 'File selected'
-														: 'Click to upload or drag and drop'}
+													{isDragging
+														? 'Drop the file here'
+														: fileName
+															? 'File selected'
+															: 'Click to upload or drag and drop'}
 												</p>
 												{fileName && (
 													<p className='text-xs text-primary mt-1 max-w-50 truncate text-center'>
@@ -222,6 +286,7 @@ export function UploadPaperDialog({ text }: { text: string }) {
 											</div>
 
 											<Input
+												ref={fileInputRef}
 												id='paper-upload'
 												name='paper'
 												type='file'
